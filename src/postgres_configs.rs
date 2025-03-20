@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::CLIENT;
+
 /// Represents the configuration settings for a Postgres database.
 ///
 /// ```
@@ -77,7 +79,7 @@ impl crate::Client {
         let url =
             format!("https://api.supabase.com/v1/projects/{project_id}/config/database/postgres");
 
-        self.client
+        CLIENT
             .get(&url)
             .bearer_auth(&self.api_key)
             .send()
@@ -95,7 +97,7 @@ impl crate::Client {
         let url =
             format!("https://api.supabase.com/v1/projects/{project_id}/config/database/postgres");
 
-        self.client
+        CLIENT
             .put(&url)
             .bearer_auth(&self.api_key)
             .json(&config)
@@ -141,7 +143,7 @@ mod tests {
         }
         "#;
 
-        let config: PostgresConfig =
+        let _config: PostgresConfig =
             serde_json::from_str(json_data).expect("JSON was not well-formatted");
     }
 }

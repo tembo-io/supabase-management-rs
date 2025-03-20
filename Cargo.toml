@@ -4,7 +4,7 @@ authors = ["Vinícius R. Miguel <vini@tembo.io>"]
 description = "Lightweight Rust client for Supabase's management API"
 license = "MIT"
 readme = "README.md"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 repository = "https://github.com/tembo-io/supabase-management-rs"
 keywords = ["postgres", "postgrest", "rest", "api", "supabase"]
@@ -13,3 +13,7 @@ categories = ["development-tools"]
 [dependencies]
 reqwest = { version = "0.12.13", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.44.1", features = ["full"] }
+
+[dev-dependencies]
+serde_json = "1.0.140"

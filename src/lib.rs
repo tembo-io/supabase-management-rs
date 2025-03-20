@@ -51,10 +51,12 @@
 //! }
 //! ```
 
-use std::fmt;
+use std::{fmt, sync::LazyLock};
 
 use serde::{de::DeserializeOwned, Serialize};
 
+/// Module for generating access tokens for Supabase projects
+pub mod auth;
 /// Module for managing Postgres configuration settings of a Supabase project.
 pub mod postgres_configs;
 /// Module for managing Supabase projects, including creation, deletion, and configuration.
@@ -62,9 +64,11 @@ pub mod project;
 /// Module for listing and managing storage settings in Supabase projects.
 pub mod storage;
 
+pub(crate) static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+
 /// A client to interact with the Supabase Management API.
+#[derive(Clone)]
 pub struct Client {
-    client: reqwest::Client,
     api_key: String,
 }
 
@@ -79,10 +83,7 @@ impl Client {
     ///
     /// See [the docs](https://supabase.com/docs/reference/api/introduction) to learn how to obtain an API key.
     pub fn new(api_key: String) -> Self {
-        Self {
-            client: reqwest::Client::new(),
-            api_key,
-        }
+        Self { api_key }
     }
 
     /// [Beta endpoint] Executes a Postgres query using the Supabase Management API.
@@ -138,7 +139,8 @@ impl Client {
         }
 
         let url = format!("https://api.supabase.com/v1/projects/{project_id}/database/query");
-        self.client
+
+        CLIENT
             .post(&url)
             .bearer_auth(&self.api_key)
             .json(&Body { query })

@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Client;
+use crate::{Client, CLIENT};
 
 impl Client {
     /// List all projects this user has created
     pub async fn list_projects(&self) -> Result<Vec<Project>, reqwest::Error> {
         let url = "https://api.supabase.com/v1/projects";
 
-        self.client
+        CLIENT
             .get(url)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
@@ -20,8 +20,7 @@ impl Client {
     pub async fn pause_project(&self, project_id: &str) -> Result<(), reqwest::Error> {
         let url = format!("https://api.supabase.com/v1/projects/{}/pause", project_id);
 
-        let response = self
-            .client
+        let response = CLIENT
             .post(url)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
@@ -37,8 +36,7 @@ impl Client {
             project_id
         );
 
-        let response = self
-            .client
+        let response = CLIENT
             .post(url)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
@@ -57,8 +55,7 @@ impl Client {
             project_id
         );
 
-        let response = self
-            .client
+        let response = CLIENT
             .get(url)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
