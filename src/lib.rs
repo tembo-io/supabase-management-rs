@@ -53,17 +53,31 @@
 
 use std::{fmt, sync::LazyLock};
 
-use serde::{de::DeserializeOwned, Serialize};
-
 /// Module for generating access tokens for Supabase projects
-pub mod auth;
-/// Module for managing Postgres configuration settings of a Supabase project.
-pub mod postgres_configs;
-/// Module for managing Supabase projects, including creation, deletion, and configuration.
-pub mod project;
-/// Module for listing and managing storage settings in Supabase projects.
-pub mod storage;
+mod auth;
+mod error;
+/// Module for managing Postgres configuration settings of a Supabase project
+mod postgres_configs;
+/// Module for managing Supabase projects, including creation, deletion, and configuration
+mod project;
+/// Module for executing SQL queries on Supabase projects
+mod query;
+/// Module for listing and managing storage settings in Supabase projects
+mod storage;
 
+pub use auth::*;
+pub use error::Error;
+pub use project::*;
+use serde::{de::DeserializeOwned, Serialize};
+pub use storage::*;
+
+macro_rules! error {
+    ($($arg:tt)*) => {
+        crate::error::with_context(format_args!($($arg)*))
+    };
+}
+
+const BASE_URL: &str = "https://api.supabase.com/v1";
 pub(crate) static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 /// A client to interact with the Supabase Management API.
@@ -86,67 +100,72 @@ impl Client {
         Self { api_key }
     }
 
-    /// [Beta endpoint] Executes a Postgres query using the Supabase Management API.
-    ///
-    /// ```no_run
-    /// # use serde::Deserialize;
-    /// # async fn run_query() -> Result<(), Box<dyn std::error::Error>> {
-    /// # let client = supabase_management_rs::Client::new("dummy".to_string());
-    ///
-    /// #     let project_id = "dummy";
-    ///
-    /// #[derive(Deserialize, PartialEq, Debug)]
-    /// struct Row {
-    ///     id: i32,
-    ///     hash_value: String,
-    /// }
-    ///
-    /// let rows: Vec<Row> = client
-    ///     .query(
-    ///         project_id,
-    ///         "SELECT generate_series(1, 3) AS id, \
-    ///         md5(generate_series(1, 3)::text) AS hash_value",
-    ///     )
-    ///     .await?;
-    ///
-    /// assert_eq!(
-    ///     rows,
-    ///     [
-    ///         Row {
-    ///             id: 1,
-    ///             hash_value: "c4ca4238a0b923820dcc509a6f75849b".into(),
-    ///         },
-    ///         Row {
-    ///             id: 2,
-    ///             hash_value: "c81e728d9d4c2f636f067f89cc14862c".into(),
-    ///         },
-    ///         Row {
-    ///             id: 3,
-    ///             hash_value: "eccbc87e4b5ce2fe28308fd9f2a7baf3".into(),
-    ///         },
-    ///     ]
-    /// );
-    /// #     Ok(())
-    /// # }
-    pub async fn query<T: DeserializeOwned>(
+    pub(crate) async fn send_request<T: DeserializeOwned>(
         &self,
-        project_id: &str,
-        query: &str,
-    ) -> Result<T, reqwest::Error> {
-        #[derive(Serialize)]
-        struct Body<'a> {
-            query: &'a str,
-        }
-
-        let url = format!("https://api.supabase.com/v1/projects/{project_id}/database/query");
-
-        CLIENT
-            .post(&url)
-            .bearer_auth(&self.api_key)
-            .json(&Body { query })
-            .send()
-            .await?
-            .json()
-            .await
+        builder: reqwest::RequestBuilder,
+    ) -> Result<T, Error> {
+        let builder = builder.bearer_auth(&self.api_key);
+        send_request(builder).await
     }
+
+    pub(crate) async fn get<T: DeserializeOwned>(
+        &self,
+        endpoint: fmt::Arguments<'_>,
+    ) -> Result<T, Error> {
+        let url = format!("{BASE_URL}/{}", endpoint);
+        // Use send_request so that the bearer token is applied.
+        self.send_request(CLIENT.get(url)).await
+    }
+
+    pub(crate) async fn post<T: DeserializeOwned>(
+        &self,
+        endpoint: fmt::Arguments<'_>,
+        payload: Option<impl Serialize>,
+    ) -> Result<T, Error> {
+        let url = format!("{BASE_URL}/{}", endpoint);
+        let mut builder = CLIENT.post(url);
+        if let Some(payload) = payload {
+            builder = builder.json(&payload);
+        }
+        self.send_request(builder).await
+    }
+
+    pub(crate) async fn put<T: DeserializeOwned>(
+        &self,
+        endpoint: fmt::Arguments<'_>,
+        payload: Option<impl Serialize>,
+    ) -> Result<T, Error> {
+        let url = format!("{BASE_URL}/{}", endpoint);
+        let mut builder = CLIENT.put(url);
+        if let Some(payload) = payload {
+            builder = builder.json(&payload);
+        }
+        self.send_request(builder).await
+    }
+}
+
+pub(crate) async fn send_request<T: DeserializeOwned>(
+    builder: reqwest::RequestBuilder,
+) -> Result<T, Error> {
+    let resp = builder
+        .send()
+        .await
+        .map_err(|err| error!("Failed to send request: {err}"))?;
+    let status = resp.status();
+
+    if status.is_client_error() || status.is_server_error() {
+        let code = status.as_u16();
+        let msg = resp
+            .text()
+            .await
+            .map_err(|err| Error(format!("Failed to get text from response: {err}").into()))?;
+        return Err(error!("{code}: {msg}"));
+    }
+
+    resp.json().await.map_err(|err| {
+        error!(
+            "Failed to parse JSON into {}: {err}",
+            std::any::type_name::<T>()
+        )
+    })
 }

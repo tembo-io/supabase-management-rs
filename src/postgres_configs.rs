@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::CLIENT;
-
 /// Represents the configuration settings for a Postgres database.
 ///
 /// ```
@@ -75,37 +73,23 @@ impl crate::Client {
     pub async fn get_postgres_config(
         &self,
         project_id: &str,
-    ) -> Result<PostgresConfig, reqwest::Error> {
-        let url =
-            format!("https://api.supabase.com/v1/projects/{project_id}/config/database/postgres");
-
-        CLIENT
-            .get(&url)
-            .bearer_auth(&self.api_key)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
+    ) -> Result<PostgresConfig, crate::Error> {
+        self.get(format_args!(
+            "projects/{project_id}/config/database/postgres"
+        ))
+        .await
     }
 
     pub async fn set_postgres_config(
         &self,
         project_id: &str,
         config: &PostgresConfig,
-    ) -> Result<PostgresConfig, reqwest::Error> {
-        let url =
-            format!("https://api.supabase.com/v1/projects/{project_id}/config/database/postgres");
-
-        CLIENT
-            .put(&url)
-            .bearer_auth(&self.api_key)
-            .json(&config)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
+    ) -> Result<PostgresConfig, crate::Error> {
+        self.put(
+            format_args!("projects/{project_id}/config/database/postgres"),
+            Some(config),
+        )
+        .await
     }
 }
 

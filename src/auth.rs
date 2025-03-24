@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::{send_request, CLIENT};
+
 #[derive(Debug, Deserialize)]
 pub struct AccessTokenResponse {
     pub expires_in: u64,
@@ -15,7 +17,7 @@ pub async fn generate_access_token(
     client_id: &str,
     client_secret: &str,
     refresh_token: &str,
-) -> Result<AccessTokenResponse, reqwest::Error> {
+) -> Result<AccessTokenResponse, crate::Error> {
     let url = "https://api.supabase.com/v1/oauth/token";
 
     let params = [
@@ -25,14 +27,5 @@ pub async fn generate_access_token(
         ("refresh_token", refresh_token),
     ];
 
-    let response = crate::CLIENT
-        .post(url)
-        .form(&params)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
-
-    Ok(response)
+    send_request(CLIENT.post(url).form(&params)).await
 }

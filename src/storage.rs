@@ -1,7 +1,5 @@
 use serde::Deserialize;
 
-use crate::CLIENT;
-
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StorageConfig {
@@ -44,29 +42,13 @@ impl crate::Client {
     pub async fn get_storage_config(
         &self,
         project_id: &str,
-    ) -> Result<StorageConfig, reqwest::Error> {
-        let url = format!("https://api.supabase.com/v1/projects/{project_id}/config/storage");
-
-        CLIENT
-            .get(&url)
-            .bearer_auth(&self.api_key)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
+    ) -> Result<StorageConfig, crate::Error> {
+        self.get(format_args!("projects/{project_id}/config/storage"))
             .await
     }
 
-    pub async fn list_buckets(&self, project_id: &str) -> Result<Vec<Bucket>, reqwest::Error> {
-        let url = format!("https://api.supabase.com/v1/projects/{project_id}/storage/buckets");
-
-        CLIENT
-            .get(&url)
-            .bearer_auth(&self.api_key)
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
+    pub async fn list_buckets(&self, project_id: &str) -> Result<Vec<Bucket>, crate::Error> {
+        self.get(format_args!("projects/{project_id}/storage/buckets"))
             .await
     }
 }
