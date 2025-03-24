@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 /// Represents the configuration settings for a Postgres database.
 ///
 /// ```
-/// # use supabase_management_rs::postgres_configs::PostgresConfig;
+/// # use supabase_management_rs::PostgresConfig;
 ///
 /// let mut postgres_config = PostgresConfig::default();
 /// postgres_config.max_parallel_workers = Some(128);

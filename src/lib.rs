@@ -64,12 +64,16 @@ mod project;
 mod query;
 /// Module for listing and managing storage settings in Supabase projects
 mod storage;
+/// Get supavisor details
+mod supavisor;
 
 pub use auth::*;
 pub use error::Error;
+pub use postgres_configs::*;
 pub use project::*;
 use serde::{de::DeserializeOwned, Serialize};
 pub use storage::*;
+pub use supavisor::*;
 
 macro_rules! error {
     ($($arg:tt)*) => {
