@@ -74,10 +74,8 @@ impl crate::Client {
         &self,
         project_id: &str,
     ) -> Result<PostgresConfig, crate::Error> {
-        self.get(format_args!(
-            "projects/{project_id}/config/database/postgres"
-        ))
-        .await
+        self.get(format!("projects/{project_id}/config/database/postgres"))
+            .await
     }
 
     pub async fn set_postgres_config(
@@ -86,7 +84,7 @@ impl crate::Client {
         config: &PostgresConfig,
     ) -> Result<PostgresConfig, crate::Error> {
         self.put(
-            format_args!("projects/{project_id}/config/database/postgres"),
+            format!("projects/{project_id}/config/database/postgres"),
             Some(config),
         )
         .await

@@ -7,7 +7,7 @@ impl Client {
         &self,
         project_id: &str,
     ) -> Result<Vec<SupavisorConfig>, crate::Error> {
-        self.get(format_args!("projects/{project_id}/config/database/pooler"))
+        self.get(format!("projects/{project_id}/config/database/pooler"))
             .await
     }
 }

@@ -112,10 +112,7 @@ impl Client {
         send_request(builder).await
     }
 
-    pub(crate) async fn get<T: DeserializeOwned>(
-        &self,
-        endpoint: fmt::Arguments<'_>,
-    ) -> Result<T, Error> {
+    pub(crate) async fn get<T: DeserializeOwned>(&self, endpoint: String) -> Result<T, Error> {
         let url = format!("{BASE_URL}/{}", endpoint);
         // Use send_request so that the bearer token is applied.
         self.send_request(CLIENT.get(url)).await
@@ -123,7 +120,7 @@ impl Client {
 
     pub(crate) async fn post<T: DeserializeOwned>(
         &self,
-        endpoint: fmt::Arguments<'_>,
+        endpoint: String,
         payload: Option<impl Serialize>,
     ) -> Result<T, Error> {
         let url = format!("{BASE_URL}/{}", endpoint);
@@ -136,7 +133,7 @@ impl Client {
 
     pub(crate) async fn put<T: DeserializeOwned>(
         &self,
-        endpoint: fmt::Arguments<'_>,
+        endpoint: String,
         payload: Option<impl Serialize>,
     ) -> Result<T, Error> {
         let url = format!("{BASE_URL}/{}", endpoint);

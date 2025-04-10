@@ -43,12 +43,12 @@ impl crate::Client {
         &self,
         project_id: &str,
     ) -> Result<StorageConfig, crate::Error> {
-        self.get(format_args!("projects/{project_id}/config/storage"))
+        self.get(format!("projects/{project_id}/config/storage"))
             .await
     }
 
     pub async fn list_buckets(&self, project_id: &str) -> Result<Vec<Bucket>, crate::Error> {
-        self.get(format_args!("projects/{project_id}/storage/buckets"))
+        self.get(format!("projects/{project_id}/storage/buckets"))
             .await
     }
 }

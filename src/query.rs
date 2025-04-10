@@ -65,7 +65,7 @@ impl Client {
         //     .await
 
         self.post(
-            format_args!("projects/{project_id}/database/query"),
+            format!("projects/{project_id}/database/query"),
             Some(&Body { query }),
         )
         .await

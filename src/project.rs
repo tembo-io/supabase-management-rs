@@ -5,18 +5,18 @@ use crate::Client;
 impl Client {
     /// List all projects this user has created
     pub async fn list_projects(&self) -> Result<Vec<Project>, crate::error::Error> {
-        self.get(format_args!("projects")).await
+        self.get("projects".into()).await
     }
 
     /// Pause an active project. Returns 400 if the project is already paused.
     pub async fn pause_project(&self, project_id: &str) -> Result<(), crate::Error> {
-        self.post(format_args!("projects/{}/pause", project_id), None::<()>)
+        self.post(format!("projects/{}/pause", project_id), None::<()>)
             .await
     }
 
     /// Restore a paused/inactive project.
     pub async fn restore_project(&self, project_id: &str) -> Result<(), crate::Error> {
-        self.post(format_args!("projects/{}/restore", project_id), None::<()>)
+        self.post(format!("projects/{}/restore", project_id), None::<()>)
             .await
     }
 
@@ -25,7 +25,7 @@ impl Client {
         &self,
         project_id: &str,
     ) -> Result<Vec<ServiceHealth>, crate::Error> {
-        self.get(format_args!(
+        self.get(format!(
             "projects/{}/health?services=auth,db,pooler,storage",
             project_id
         ))
